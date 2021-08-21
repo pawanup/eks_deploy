@@ -1,1 +1,1 @@
-# terraform_samle
+# Terraform Sample
