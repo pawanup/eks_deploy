@@ -33,7 +33,6 @@ jobs:
     steps:
       - checkout
       - run: pip3 install trufflehog
-      - run: trufflehog --regex --entropy=False https://github.com/trufflesecurity/truffleHog.git || echo "ok, it works.. \nNow running on project.."
       - run: trufflehog --regex --entropy=False .
   checkov-scan:
     docker:
