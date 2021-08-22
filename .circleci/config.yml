@@ -1,0 +1,56 @@
+version: 2.1
+
+jobs:
+  semgrep-scan:
+    parameters:
+      repo_path:
+        type: string
+        default: myorg/semgrep-test-repo
+      default_branch:
+        type: string
+        default: main
+    environment:
+      SEMGREP_RULES: >- # more at semgrep.dev/explore
+        p/ci
+        p/terraform
+        p/secrets
+    docker:
+      - image: returntocorp/semgrep-agent:v1
+    steps:
+      - checkout
+      - run:
+          name: "Semgrep scan"
+          command: semgrep-agent
+  snyk-scan:
+    docker:
+      - image: 'cimg/go:1.16'
+    steps:
+      - checkout
+      - snyk/scan
+  trufflehog-scan:
+    docker:
+      - image: 'cimg/python:3.9.6'
+    steps:
+      - checkout
+      - run: pip3 install trufflehog
+      - run: trufflehog --regex --entropy=False https://github.com/trufflesecurity/truffleHog.git || echo "ok, it works.. \nNow running on project.."
+      - run: trufflehog --regex --entropy=False .
+  checkov-scan:
+    docker:
+      - image: 'cimg/python:3.9.6'
+    steps:
+      - checkout
+      - run: pip3 install checkov
+      - run: checkov -d tf             
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+  snyk: snyk/snyk@1.0.2
+workflows:
+  main:
+    jobs:
+      - semgrep-scan
+      - trufflehog-scan
+      - checkov-scan
+      # Supported file extensions for IaC are tf, yml, yaml & json    
+      - snyk/scan-iac:
+          context: SnykToken
