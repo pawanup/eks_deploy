@@ -40,7 +40,20 @@ jobs:
     steps:
       - checkout
       - run: pip3 install checkov
-      - run: checkov -d tf             
+      - run:
+          name: terraform-install
+          command: |
+            wget https://releases.hashicorp.com/terraform/0.12.20/terraform_0.12.20_linux_amd64.zip
+            sudo unzip terraform_0.12.20_linux_amd64.zip -d /usr/bin
+            rm terraform_0.12.20_linux_amd64.zip
+            terraform --version
+      - run:
+          name: terraform-plan
+          command: |
+            cd app
+            terraform plan --out tfplan.binary
+            terraform show -json tfplan.binary > tfplan.json
+      - run: checkov -d tfplan.json             
 orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.1
   snyk: snyk/snyk@1.0.2
